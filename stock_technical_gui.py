@@ -25,20 +25,37 @@ if kode_saham:
             df = data.copy()
             df.dropna(inplace=True)
 
-            # Tambahkan indikator
-            df['MA20'] = ta.trend.sma_indicator(df['Close'], window=20)
-            df['RSI'] = ta.momentum.RSIIndicator(df['Close']).rsi()
-            macd = ta.trend.MACD(df['Close'])
+            # Pastikan data dalam format yang benar (Series, bukan DataFrame kolom tunggal)
+            close_series = df['Close']
+            high_series = df['High']
+            low_series = df['Low']
+            
+            # Tambahkan indikator dengan format yang benar
+            df['MA20'] = ta.trend.sma_indicator(close_series, window=20)
+            df['RSI'] = ta.momentum.RSIIndicator(close_series).rsi()
+            
+            # MACD
+            macd = ta.trend.MACD(close_series)
             df['MACD'] = macd.macd()
             df['Signal'] = macd.macd_signal()
-            bollinger = ta.volatility.BollingerBands(df['Close'])
+            
+            # Bollinger Bands
+            bollinger = ta.volatility.BollingerBands(close_series)
             df['BB_upper'] = bollinger.bollinger_hband()
             df['BB_lower'] = bollinger.bollinger_lband()
             df['BB_mid'] = bollinger.bollinger_mavg()
-            stoch = ta.momentum.StochasticOscillator(df['High'], df['Low'], df['Close'])
+            
+            # Stochastic
+            stoch = ta.momentum.StochasticOscillator(high=high_series, low=low_series, close=close_series)
             df['%K'] = stoch.stoch()
             df['%D'] = stoch.stoch_signal()
-            df['ATR'] = ta.volatility.AverageTrueRange(df['High'], df['Low'], df['Close']).average_true_range()
+            
+            # ATR
+            df['ATR'] = ta.volatility.AverageTrueRange(
+                high=high_series, 
+                low=low_series, 
+                close=close_series
+            ).average_true_range()
 
             # Visualisasi
             fig, ax = plt.subplots(figsize=(12, 6))
@@ -100,4 +117,4 @@ if kode_saham:
                 st.markdown(f"- {sinyal}")
 
     except Exception as e:
-        st.error(f"Terjadi kesalahan: {e}")
+        st.error(f"Terjadi kesalahan: {str(e)}")
